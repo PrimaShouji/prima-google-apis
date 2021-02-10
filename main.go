@@ -15,11 +15,20 @@ import (
 type miniEvent struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	ID          string `json:"id"`
 	StartTime   string `json:"startTime"`
+}
+
+type eventDeleteRequest struct {
+	ID string `json:"id"`
 }
 
 type eventCreateResponse struct {
 	EventLink string `json:"eventLink"`
+}
+
+type genericResponse struct {
+	Message string `json:"message"`
 }
 
 func main() {
@@ -70,6 +79,7 @@ func main() {
 				miniEvents = append(miniEvents, &miniEvent{
 					Title:       event.Summary,
 					Description: event.Description,
+					ID:          event.Id,
 					StartTime:   event.Start.DateTime,
 				})
 			}
@@ -131,6 +141,34 @@ func main() {
 
 			ctx.Type("json")
 			log.Printf("Created event: %s\n", newEvent.HtmlLink)
+			return ctx.SendString(string(res))
+		})
+
+		cal.Delete("/"+curEventKind, func(ctx *fiber.Ctx) error {
+			// Read request
+			deleteEventReq := &eventDeleteRequest{}
+			err := json.Unmarshal(ctx.Body(), deleteEventReq)
+			if err != nil {
+				log.Printf("Unmarshaling client request failed. %v\n", err)
+				return err
+			}
+
+			// Execute request
+			err = srv.Events.Delete(curEventKindID, deleteEventReq.ID).Do()
+			if err != nil {
+				log.Printf("Event deletion faild. %v\n", err)
+			}
+
+			genericRes := &genericResponse{Message: "success"}
+
+			// Serialize response
+			res, err := json.Marshal(genericRes)
+			if err != nil {
+				log.Printf("Failed to marshal event list. %v\n", err)
+				return err
+			}
+
+			ctx.Type("json")
 			return ctx.SendString(string(res))
 		})
 	}
