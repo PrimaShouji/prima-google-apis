@@ -23,7 +23,7 @@ func main() {
 
 	app := fiber.New()
 
-	var eventCalendars = map[string]string{
+	var eventCalendarEnvVars = map[string]string{
 		"drs": "PRIMA_GAPI_CAL_DRS",
 		"dr":  "PRIMA_GAPI_CAL_DR",
 		"cll": "PRIMA_GAPI_CAL_CLL",
@@ -31,7 +31,7 @@ func main() {
 	}
 
 	spreadsheet := app.Group("/spreadsheet")
-	for eventKind := range eventCalendars {
+	for eventKind := range eventCalendarEnvVars {
 		curEventKind := eventKind
 		spreadsheet.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
 			return nil
@@ -39,7 +39,7 @@ func main() {
 	}
 
 	calendar := app.Group("/calendar")
-	for eventKind, eventKindEnv := range eventCalendars {
+	for eventKind, eventKindEnv := range eventCalendarEnvVars {
 		curEventKind := eventKind
 		curEventKindID := os.Getenv(eventKindEnv)
 
