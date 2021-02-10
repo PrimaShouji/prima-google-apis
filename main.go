@@ -156,7 +156,7 @@ func main() {
 			// Execute request
 			err = srv.Events.Delete(curEventKindID, deleteEventReq.ID).Do()
 			if err != nil {
-				log.Printf("Event deletion faild. %v\n", err)
+				log.Printf("Event deletion failed. %v\n", err)
 			}
 
 			genericRes := &genericResponse{Message: "success"}
