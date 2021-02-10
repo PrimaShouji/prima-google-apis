@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"os"
@@ -10,6 +11,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"google.golang.org/api/calendar/v3"
 )
+
+type miniEvent struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	StartTime   string `json:"startTime"`
+}
 
 func main() {
 	port := flag.Uint("port", 7552, "server binding port")
@@ -44,16 +51,33 @@ func main() {
 		curEventKindID := os.Getenv(eventKindEnv)
 
 		calendar.Get("/"+curEventKind, func(ctx *fiber.Ctx) error {
+			// Fetch events
 			t := time.Now().Format(time.RFC3339)
-
-			_, err := srv.Events.List(curEventKindID).ShowDeleted(false).
-				SingleEvents(true).TimeMin(t).MaxResults(10).OrderBy("startTime").Do()
+			events, err := srv.Events.List(curEventKindID).ShowDeleted(false).
+				SingleEvents(true).TimeMin(t).OrderBy("startTime").Do()
 			if err != nil {
 				log.Printf("Unable to retrieve next ten of the user's events: %v", err)
 				return err
 			}
 
-			return ctx.SendString("") // TODO: format events.items
+			// Map full event objects to trimmed-down versions
+			miniEvents := make([]*miniEvent, 0)
+			for _, event := range events.Items {
+				miniEvents = append(miniEvents, &miniEvent{
+					Title:       event.Summary,
+					Description: event.Description,
+					StartTime:   event.Start.DateTime,
+				})
+			}
+
+			// Serialize
+			res, err := json.Marshal(miniEvents)
+			if err != nil {
+				log.Println("Failed to marshal event list.")
+				return err
+			}
+
+			return ctx.SendString(string(res))
 		})
 
 		calendar.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
