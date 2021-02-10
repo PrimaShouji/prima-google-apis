@@ -2,8 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"os"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"google.golang.org/api/calendar/v3"
@@ -14,24 +17,57 @@ func main() {
 	flag.Parse()
 
 	client := newGoogleAPI()
-
-	_, err := calendar.New(client)
+	srv, err := calendar.New(client)
 	if err != nil {
 		log.Fatalf("Unable to retrieve Calendar client: %v", err)
 	}
 
 	app := fiber.New()
 
-	var eventKind = []string{"drs", "dr", "cll", "ba"}
+	var eventCalendars = map[string]string{
+		"drs": "PRIMA_GAPI_CAL_DRS",
+		"dr":  "PRIMA_GAPI_CAL_DR",
+		"cll": "PRIMA_GAPI_CAL_CLL",
+		"ba":  "PRIMA_GAPI_CAL_BA",
+	}
 
 	spreadsheet := app.Group("/spreadsheet")
-	for _, ek := range eventKind {
-		spreadsheet.Post("/" + ek)
+	for eventKind := range eventCalendars {
+		curEventKind := eventKind
+		spreadsheet.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
+			return nil
+		})
 	}
 
 	calendar := app.Group("/calendar")
-	for _, ek := range eventKind {
-		calendar.Post("/" + ek)
+	for eventKind, eventKindEnv := range eventCalendars {
+		curEventKind := eventKind
+
+		t := time.Now().Format(time.RFC3339)
+
+		events, err := srv.Events.List(os.Getenv(eventKindEnv)).ShowDeleted(false).
+			SingleEvents(true).TimeMin(t).MaxResults(10).OrderBy("startTime").Do()
+		if err != nil {
+			log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
+		}
+
+		fmt.Println("Upcoming events:")
+
+		if len(events.Items) == 0 {
+			fmt.Println("No upcoming events found.")
+		} else {
+			for _, item := range events.Items {
+				date := item.Start.DateTime
+				if date == "" {
+					date = item.Start.Date
+				}
+				fmt.Printf("%v (%v)\n", item.Summary, date)
+			}
+		}
+
+		calendar.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
+			return nil
+		})
 	}
 
 	app.Listen(":" + strconv.Itoa(int(*port)))
