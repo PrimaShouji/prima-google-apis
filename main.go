@@ -18,6 +18,10 @@ type miniEvent struct {
 	StartTime   string `json:"startTime"`
 }
 
+type eventCreateResponse struct {
+	EventLink string `json:"eventLink"`
+}
+
 func main() {
 	port := flag.Uint("port", 7552, "server binding port")
 	flag.Parse()
@@ -37,26 +41,26 @@ func main() {
 		"ba":  "PRIMA_GAPI_CAL_BA",
 	}
 
-	spreadsheet := app.Group("/spreadsheet")
+	spr := app.Group("/spreadsheet")
 	for eventKind := range eventCalendarEnvVars {
 		curEventKind := eventKind
-		spreadsheet.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
+		spr.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
 			return nil
 		})
 	}
 
-	calendar := app.Group("/calendar")
+	cal := app.Group("/calendar")
 	for eventKind, eventKindEnv := range eventCalendarEnvVars {
 		curEventKind := eventKind
 		curEventKindID := os.Getenv(eventKindEnv)
 
-		calendar.Get("/"+curEventKind, func(ctx *fiber.Ctx) error {
+		cal.Get("/"+curEventKind, func(ctx *fiber.Ctx) error {
 			// Fetch events
 			t := time.Now().Format(time.RFC3339)
 			events, err := srv.Events.List(curEventKindID).ShowDeleted(false).
 				SingleEvents(true).TimeMin(t).OrderBy("startTime").Do()
 			if err != nil {
-				log.Printf("Unable to retrieve next ten of the user's events: %v", err)
+				log.Printf("Unable to retrieve next ten of the user's events: %v\n", err)
 				return err
 			}
 
@@ -73,7 +77,7 @@ func main() {
 			// Serialize
 			res, err := json.Marshal(miniEvents)
 			if err != nil {
-				log.Println("Failed to marshal event list.")
+				log.Printf("Failed to marshal event list. %v\n", err)
 				return err
 			}
 
@@ -81,8 +85,53 @@ func main() {
 			return ctx.SendString(string(res))
 		})
 
-		calendar.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
-			return nil
+		cal.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
+			// Read request
+			newEventReq := &miniEvent{}
+			err := json.Unmarshal(ctx.Body(), newEventReq)
+			if err != nil {
+				log.Printf("Unmarshaling client request failed. %v\n", err)
+				return err
+			}
+
+			// Expand to Calendar event
+			startTime, err := time.Parse(time.RFC3339, newEventReq.StartTime)
+			if err != nil {
+				log.Printf("Parsing event start time failed. %v\n", err)
+				return err
+			}
+			endTime := startTime.Add(time.Hour * 2)
+
+			newEvent := &calendar.Event{
+				Summary:     newEventReq.Title,
+				Description: newEventReq.Description,
+				Start: &calendar.EventDateTime{
+					DateTime: newEventReq.StartTime,
+					TimeZone: "America/Los_Angeles",
+				},
+				End: &calendar.EventDateTime{
+					DateTime: endTime.Format(time.RFC3339),
+					TimeZone: "America/Los_Angeles",
+				},
+			}
+
+			// Publish to calendar
+			newEvent, err = srv.Events.Insert(curEventKindID, newEvent).Do()
+			if err != nil {
+				log.Printf("Unable to create event. %v\n", err)
+			}
+
+			// Serialize response
+			creationResponse := &eventCreateResponse{EventLink: newEvent.HtmlLink}
+			res, err := json.Marshal(creationResponse)
+			if err != nil {
+				log.Printf("Failed to marshal event creation response. %v\n", err)
+				return err
+			}
+
+			ctx.Type("json")
+			log.Printf("Created event: %s\n", newEvent.HtmlLink)
+			return ctx.SendString(string(res))
 		})
 	}
 
