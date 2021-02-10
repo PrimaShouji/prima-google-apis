@@ -77,6 +77,7 @@ func main() {
 				return err
 			}
 
+			ctx.Type("json")
 			return ctx.SendString(string(res))
 		})
 
