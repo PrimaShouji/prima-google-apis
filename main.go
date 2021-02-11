@@ -149,6 +149,7 @@ func main() {
 			event, err := srv.Events.Get(curEventKindID, id).Do()
 			if err != nil {
 				log.Printf("Event deletion failed. %v\n", err)
+				return err
 			}
 
 			// Map big event to small one
@@ -208,6 +209,7 @@ func main() {
 			event, err := srv.Events.Update(curEventKindID, id, newEvent).Do()
 			if err != nil {
 				log.Printf("Event update failed. %v\n", err)
+				return err
 			}
 
 			// Map big event to small one
@@ -236,6 +238,7 @@ func main() {
 			err := srv.Events.Delete(curEventKindID, id).Do()
 			if err != nil {
 				log.Printf("Event deletion failed. %v\n", err)
+				return err
 			}
 
 			log.Printf("Deleted event %s\n", id)
