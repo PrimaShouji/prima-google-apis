@@ -142,11 +142,98 @@ func main() {
 			return ctx.SendString(string(res))
 		})
 
+		cal.Get("/"+curEventKind+"/:id", func(ctx *fiber.Ctx) error {
+			id := ctx.Params("id")
+
+			// Execute request
+			event, err := srv.Events.Get(curEventKindID, id).Do()
+			if err != nil {
+				log.Printf("Event deletion failed. %v\n", err)
+			}
+
+			// Map big event to small one
+			me := &miniEvent{
+				Title:       event.Summary,
+				Description: event.Description,
+				StartTime:   event.Start.DateTime,
+				ID:          event.Id,
+			}
+
+			// Serialize response
+			res, err := json.Marshal(me)
+			if err != nil {
+				log.Printf("Failed to marshal event. %v\n", err)
+				return err
+			}
+
+			ctx.Type("json")
+			return ctx.SendString(string(res))
+		})
+
+		cal.Put("/"+curEventKind+"/:id", func(ctx *fiber.Ctx) error {
+			id := ctx.Params("id")
+
+			// Read request
+			newEventReq := &miniEvent{}
+			err := json.Unmarshal(ctx.Body(), newEventReq)
+			if err != nil {
+				log.Printf("Unmarshaling client request failed. %v\n", err)
+				return err
+			}
+
+			log.Printf("Updating event of type %s: %v\n", curEventKind, newEventReq)
+
+			// Expand to Calendar event
+			startTime, err := time.Parse(time.RFC3339, newEventReq.StartTime)
+			if err != nil {
+				log.Printf("Parsing event start time failed. %v\n", err)
+				return err
+			}
+			endTime := startTime.Add(time.Hour * 2)
+
+			newEvent := &calendar.Event{
+				Summary:     newEventReq.Title,
+				Description: newEventReq.Description,
+				Start: &calendar.EventDateTime{
+					DateTime: newEventReq.StartTime,
+					TimeZone: "America/Los_Angeles",
+				},
+				End: &calendar.EventDateTime{
+					DateTime: endTime.Format(time.RFC3339),
+					TimeZone: "America/Los_Angeles",
+				},
+			}
+
+			// Execute request
+			event, err := srv.Events.Update(curEventKindID, id, newEvent).Do()
+			if err != nil {
+				log.Printf("Event update failed. %v\n", err)
+			}
+
+			// Map big event to small one
+			me := &miniEvent{
+				Title:       event.Summary,
+				Description: event.Description,
+				StartTime:   event.Start.DateTime,
+				ID:          event.Id,
+			}
+
+			// Serialize response
+			res, err := json.Marshal(me)
+			if err != nil {
+				log.Printf("Failed to marshal event. %v\n", err)
+				return err
+			}
+
+			ctx.Type("json")
+			return ctx.SendString(string(res))
+		})
+
 		cal.Delete("/"+curEventKind+"/:id", func(ctx *fiber.Ctx) error {
 			id := ctx.Params("id")
 
 			// Execute request
-			err = srv.Events.Delete(curEventKindID, id).Do()
+			err := srv.Events.Delete(curEventKindID, id).Do()
 			if err != nil {
 				log.Printf("Event deletion failed. %v\n", err)
 			}
