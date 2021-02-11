@@ -94,8 +94,7 @@ func main() {
 		cal.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
 			// Read request
 			newEventReq := &miniEvent{}
-			err := json.Unmarshal(ctx.Body(), newEventReq)
-			if err != nil {
+			if err := json.Unmarshal(ctx.Body(), newEventReq); err != nil {
 				log.Printf("Unmarshaling client request failed. %v\n", err)
 				return err
 			}
@@ -176,8 +175,7 @@ func main() {
 
 			// Read request
 			newEventReq := &miniEvent{}
-			err := json.Unmarshal(ctx.Body(), newEventReq)
-			if err != nil {
+			if err := json.Unmarshal(ctx.Body(), newEventReq); err != nil {
 				log.Printf("Unmarshaling client request failed. %v\n", err)
 				return err
 			}
@@ -235,8 +233,7 @@ func main() {
 			id := ctx.Params("id")
 
 			// Execute request
-			err := srv.Events.Delete(curEventKindID, id).Do()
-			if err != nil {
+			if err := srv.Events.Delete(curEventKindID, id).Do(); err != nil {
 				log.Printf("Event deletion failed. %v\n", err)
 				return err
 			}
@@ -248,7 +245,7 @@ func main() {
 			// Serialize response
 			res, err := json.Marshal(genericRes)
 			if err != nil {
-				log.Printf("Failed to marshal event list. %v\n", err)
+				log.Printf("Failed to marshal response. %v\n", err)
 				return err
 			}
 
