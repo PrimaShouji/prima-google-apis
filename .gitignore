@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+prima-google-apis
 
 # Test binary, built with `go test -c`
 *.test
