@@ -146,7 +146,7 @@ func main() {
 			return ctx.SendString(string(res))
 		})
 
-		cal.Delete("/"+curEventKind, func(ctx *fiber.Ctx) error {
+		cal.Post("/"+curEventKind+"/delete", func(ctx *fiber.Ctx) error {
 			// Read request
 			deleteEventReq := &eventDeleteRequest{}
 			err := json.Unmarshal(ctx.Body(), deleteEventReq)
@@ -160,6 +160,8 @@ func main() {
 			if err != nil {
 				log.Printf("Event deletion failed. %v\n", err)
 			}
+
+			log.Printf("Deleted event %s\n", deleteEventReq.ID)
 
 			genericRes := &genericResponse{Message: "success"}
 
