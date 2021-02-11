@@ -19,10 +19,6 @@ type miniEvent struct {
 	StartTime   string `json:"startTime"`
 }
 
-type eventDeleteRequest struct {
-	ID string `json:"id"`
-}
-
 type eventCreateResponse struct {
 	EventLink string `json:"eventLink"`
 }
