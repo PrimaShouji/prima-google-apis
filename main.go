@@ -104,6 +104,8 @@ func main() {
 				return err
 			}
 
+			log.Printf("Posting event of type %s: %v\n", curEventKind, newEventReq)
+
 			// Expand to Calendar event
 			startTime, err := time.Parse(time.RFC3339, newEventReq.StartTime)
 			if err != nil {
