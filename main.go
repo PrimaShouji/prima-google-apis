@@ -107,7 +107,7 @@ func main() {
 				log.Printf("Parsing event start time failed. %v\n", err)
 				return err
 			}
-			endTime := startTime.Add(time.Hour * 2)
+			endTime := startTime.Add(time.Hour * 3)
 
 			newEvent := &calendar.Event{
 				Summary:     newEventReq.Title,
@@ -188,7 +188,7 @@ func main() {
 				log.Printf("Parsing event start time failed. %v\n", err)
 				return err
 			}
-			endTime := startTime.Add(time.Hour * 2)
+			endTime := startTime.Add(time.Hour * 3)
 
 			newEvent := &calendar.Event{
 				Summary:     newEventReq.Title,
