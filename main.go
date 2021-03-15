@@ -15,6 +15,8 @@ import (
 	"google.golang.org/api/option"
 )
 
+const pdt = true
+
 type miniEvent struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -112,13 +114,18 @@ func main() {
 				log.Printf("Parsing event start time failed. %v\n", err)
 				return err
 			}
+
+			if pdt {
+				startTime = startTime.Add(time.Hour * -1)
+			}
+
 			endTime := startTime.Add(time.Hour * 3)
 
 			newEvent := &calendar.Event{
 				Summary:     newEventReq.Title,
 				Description: newEventReq.Description,
 				Start: &calendar.EventDateTime{
-					DateTime: newEventReq.StartTime,
+					DateTime: startTime.Format(time.RFC3339),
 					TimeZone: "America/Los_Angeles",
 				},
 				End: &calendar.EventDateTime{
@@ -193,13 +200,18 @@ func main() {
 				log.Printf("Parsing event start time failed. %v\n", err)
 				return err
 			}
+
+			if pdt {
+				startTime = startTime.Add(time.Hour * -1)
+			}
+
 			endTime := startTime.Add(time.Hour * 3)
 
 			newEvent := &calendar.Event{
 				Summary:     newEventReq.Title,
 				Description: newEventReq.Description,
 				Start: &calendar.EventDateTime{
-					DateTime: newEventReq.StartTime,
+					DateTime: startTime.Format(time.RFC3339),
 					TimeZone: "America/Los_Angeles",
 				},
 				End: &calendar.EventDateTime{
