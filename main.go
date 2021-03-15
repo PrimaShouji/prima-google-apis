@@ -47,6 +47,7 @@ func main() {
 		"drs": "PRIMA_GAPI_CAL_DRS",
 		"dr":  "PRIMA_GAPI_CAL_DR",
 		"cll": "PRIMA_GAPI_CAL_CLL",
+		"bcf": "PRIMA_GAPI_CAL_BCF",
 		"ba":  "PRIMA_GAPI_CAL_BA",
 	}
 
