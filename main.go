@@ -19,7 +19,7 @@ type miniEvent struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	ID          string `json:"id"`
-	Color       int    `json:"color"`
+	Color       int    `json:"color"` // Can be 1-11
 	StartTime   string `json:"startTime"`
 }
 
