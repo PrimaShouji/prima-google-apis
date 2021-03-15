@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"google.golang.org/api/calendar/v3"
+	"google.golang.org/api/option"
 )
 
 type miniEvent struct {
@@ -34,7 +36,7 @@ func main() {
 	flag.Parse()
 
 	client := newGoogleAPI()
-	srv, err := calendar.New(client)
+	srv, err := calendar.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
 		log.Fatalf("Unable to retrieve Calendar client: %v", err)
 	}
