@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -16,6 +17,7 @@ type miniEvent struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	ID          string `json:"id"`
+	Color       int    `json:"color"`
 	StartTime   string `json:"startTime"`
 }
 
@@ -201,6 +203,7 @@ func main() {
 					DateTime: endTime.Format(time.RFC3339),
 					TimeZone: "America/Los_Angeles",
 				},
+				ColorId: fmt.Sprint(newEventReq.Color),
 			}
 
 			// Execute request
