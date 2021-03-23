@@ -188,27 +188,34 @@ func main() {
 
 			log.Printf("Updating event of type %s: %v\n", curEventKind, newEventReq)
 
-			// Expand to Calendar event
-			startTime, err := time.Parse(time.RFC3339, newEventReq.StartTime)
+			existingEvent, err := srv.Events.Get(curEventKindID, id).Do()
 			if err != nil {
-				log.Printf("Parsing event start time failed. %v\n", err)
+				log.Printf("Event fetch failed. %v\n", err)
 				return err
 			}
-
-			endTime := startTime.Add(time.Hour * 3)
 
 			newEvent := &calendar.Event{
 				Summary:     newEventReq.Title,
 				Description: newEventReq.Description,
-				Start: &calendar.EventDateTime{
+				ColorId:     fmt.Sprint(newEventReq.Color),
+				Start:       existingEvent.Start,
+				End:         existingEvent.End,
+			}
+
+			// Expand to Calendar event
+			startTime, err := time.Parse(time.RFC3339, newEventReq.StartTime)
+			if err == nil {
+				endTime := startTime.Add(time.Hour * 3)
+
+				newEvent.Start = &calendar.EventDateTime{
 					DateTime: startTime.Format(time.RFC3339),
 					TimeZone: "America/Los_Angeles",
-				},
-				End: &calendar.EventDateTime{
+				}
+
+				newEvent.End = &calendar.EventDateTime{
 					DateTime: endTime.Format(time.RFC3339),
 					TimeZone: "America/Los_Angeles",
-				},
-				ColorId: fmt.Sprint(newEventReq.Color),
+				}
 			}
 
 			// Execute request
