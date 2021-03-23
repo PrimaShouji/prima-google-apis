@@ -153,7 +153,7 @@ func main() {
 			// Execute request
 			event, err := srv.Events.Get(curEventKindID, id).Do()
 			if err != nil {
-				log.Printf("Event deletion failed. %v\n", err)
+				log.Printf("Event fetch failed. %v\n", err)
 				return err
 			}
 
