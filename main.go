@@ -15,8 +15,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-const pdt = true
-
 type miniEvent struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -115,10 +113,6 @@ func main() {
 				return err
 			}
 
-			if pdt {
-				startTime = startTime.Add(time.Hour * -1)
-			}
-
 			endTime := startTime.Add(time.Hour * 3)
 
 			newEvent := &calendar.Event{
@@ -199,10 +193,6 @@ func main() {
 			if err != nil {
 				log.Printf("Parsing event start time failed. %v\n", err)
 				return err
-			}
-
-			if pdt {
-				startTime = startTime.Add(time.Hour * -1)
 			}
 
 			endTime := startTime.Add(time.Hour * 3)
