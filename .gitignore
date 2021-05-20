@@ -16,3 +16,4 @@ prima-google-apis
 # vendor/
 
 *.yml
+*.json
