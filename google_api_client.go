@@ -15,24 +15,23 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-func newGoogleAPI() *http.Client {
-	config := getGoogleAPIConfig()
-	client := getGoogleAPIClient(config)
+func newGoogleAPI(tokenPath, credentialPath string) *http.Client {
+	config := getGoogleAPIConfig(credentialPath)
+	client := getGoogleAPIClient(config, tokenPath)
 	return client
 }
 
-func getGoogleAPIClient(config *oauth2.Config) *http.Client {
-	tokFile := os.Getenv("PRIMA_GAPI_TOKEN_FILE")
-	tok, err := tokenFromFile(tokFile)
+func getGoogleAPIClient(config *oauth2.Config, tokenPath string) *http.Client {
+	tok, err := tokenFromFile(tokenPath)
 	if err != nil {
 		tok = getTokenFromWeb(config)
-		saveToken(tokFile, tok)
+		saveToken(tokenPath, tok)
 	}
 	return config.Client(context.Background(), tok)
 }
 
-func getGoogleAPIConfig() *oauth2.Config {
-	b, err := ioutil.ReadFile(os.Getenv("PRIMA_GAPI_CREDENTIALS_FILE"))
+func getGoogleAPIConfig(credentialPath string) *oauth2.Config {
+	b, err := ioutil.ReadFile(credentialPath)
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/olebedev/config"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 )
@@ -33,28 +34,42 @@ type genericResponse struct {
 
 func main() {
 	port := flag.Uint("port", 7552, "server binding port")
+	configPath := flag.String("config", "config.yml", "configuration file path")
 	flag.Parse()
 
-	client := newGoogleAPI()
+	// Load configuration
+	conf, err := config.ParseYamlFile(*configPath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Initialize Google API client
+	tokenPath, err := conf.String("token")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	credentialPath, err := conf.String("credentials")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	client := newGoogleAPI(tokenPath, credentialPath)
 	srv, err := calendar.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
 		log.Fatalf("Unable to retrieve Calendar client: %v", err)
 	}
 
+	// Set up router
 	app := fiber.New()
 
-	var eventCalendarEnvVars = map[string]string{
-		"drs":    "PRIMA_GAPI_CAL_DRS",
-		"dr":     "PRIMA_GAPI_CAL_DR",
-		"cll":    "PRIMA_GAPI_CAL_CLL",
-		"bcf":    "PRIMA_GAPI_CAL_BCF",
-		"ba":     "PRIMA_GAPI_CAL_BA",
-		"social": "PRIMA_GAPI_CAL_SOCIAL",
-		"zad":    "PRIMA_GAPI_CAL_ZADNOR",
+	eventSchedulePaths, err := conf.Map("schedules")
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	spr := app.Group("/spreadsheet")
-	for eventKind := range eventCalendarEnvVars {
+	for eventKind := range eventSchedulePaths {
 		curEventKind := eventKind
 		spr.Post("/"+curEventKind, func(ctx *fiber.Ctx) error {
 			return nil
@@ -62,9 +77,9 @@ func main() {
 	}
 
 	cal := app.Group("/calendar")
-	for eventKind, eventKindEnv := range eventCalendarEnvVars {
+	for eventKind, eventKindEnv := range eventSchedulePaths {
 		curEventKind := eventKind
-		curEventKindID := os.Getenv(eventKindEnv)
+		curEventKindID := os.Getenv(eventKindEnv.(string))
 
 		cal.Get("/"+curEventKind, func(ctx *fiber.Ctx) error {
 			// Fetch events
