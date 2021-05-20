@@ -44,11 +44,13 @@ func main() {
 	app := fiber.New()
 
 	var eventCalendarEnvVars = map[string]string{
-		"drs": "PRIMA_GAPI_CAL_DRS",
-		"dr":  "PRIMA_GAPI_CAL_DR",
-		"cll": "PRIMA_GAPI_CAL_CLL",
-		"bcf": "PRIMA_GAPI_CAL_BCF",
-		"ba":  "PRIMA_GAPI_CAL_BA",
+		"drs":    "PRIMA_GAPI_CAL_DRS",
+		"dr":     "PRIMA_GAPI_CAL_DR",
+		"cll":    "PRIMA_GAPI_CAL_CLL",
+		"bcf":    "PRIMA_GAPI_CAL_BCF",
+		"ba":     "PRIMA_GAPI_CAL_BA",
+		"social": "PRIMA_GAPI_CAL_SOCIAL",
+		"zad":    "PRIMA_GAPI_CAL_ZADNOR",
 	}
 
 	spr := app.Group("/spreadsheet")
