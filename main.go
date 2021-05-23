@@ -149,6 +149,7 @@ func main() {
 			newEvent, err = srv.Events.Insert(curEventKindID, newEvent).Do()
 			if err != nil {
 				log.Printf("Unable to create event. %v\n", err)
+				return err
 			}
 
 			// Serialize response
