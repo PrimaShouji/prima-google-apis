@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -77,14 +76,14 @@ func main() {
 	}
 
 	cal := app.Group("/calendar")
-	for eventKind, eventKindEnv := range eventSchedulePaths {
+	for eventKind, calendarAddressIface := range eventSchedulePaths {
 		curEventKind := eventKind
-		curEventKindID := os.Getenv(eventKindEnv.(string))
+		calendarAddress := calendarAddressIface.(string)
 
 		cal.Get("/"+curEventKind, func(ctx *fiber.Ctx) error {
 			// Fetch events
 			t := time.Now().Format(time.RFC3339)
-			events, err := srv.Events.List(curEventKindID).ShowDeleted(false).
+			events, err := srv.Events.List(calendarAddress).ShowDeleted(false).
 				SingleEvents(true).TimeMin(t).OrderBy("startTime").Do()
 			if err != nil {
 				log.Printf("Unable to retrieve next ten of the user's events: %v\n", err)
@@ -146,7 +145,7 @@ func main() {
 			}
 
 			// Publish to calendar
-			newEvent, err = srv.Events.Insert(curEventKindID, newEvent).Do()
+			newEvent, err = srv.Events.Insert(calendarAddress, newEvent).Do()
 			if err != nil {
 				log.Printf("Unable to create event. %v\n", err)
 				return err
@@ -169,7 +168,7 @@ func main() {
 			id := ctx.Params("id")
 
 			// Execute request
-			event, err := srv.Events.Get(curEventKindID, id).Do()
+			event, err := srv.Events.Get(calendarAddress, id).Do()
 			if err != nil {
 				log.Printf("Event fetch failed. %v\n", err)
 				return err
@@ -206,7 +205,7 @@ func main() {
 
 			log.Printf("Updating event of type %s: %v\n", curEventKind, newEventReq)
 
-			existingEvent, err := srv.Events.Get(curEventKindID, id).Do()
+			existingEvent, err := srv.Events.Get(calendarAddress, id).Do()
 			if err != nil {
 				log.Printf("Event fetch failed. %v\n", err)
 				return err
@@ -237,7 +236,7 @@ func main() {
 			}
 
 			// Execute request
-			event, err := srv.Events.Update(curEventKindID, id, newEvent).Do()
+			event, err := srv.Events.Update(calendarAddress, id, newEvent).Do()
 			if err != nil {
 				log.Printf("Event update failed. %v\n", err)
 				return err
@@ -266,7 +265,7 @@ func main() {
 			id := ctx.Params("id")
 
 			// Execute request
-			if err := srv.Events.Delete(curEventKindID, id).Do(); err != nil {
+			if err := srv.Events.Delete(calendarAddress, id).Do(); err != nil {
 				log.Printf("Event deletion failed. %v\n", err)
 				return err
 			}
