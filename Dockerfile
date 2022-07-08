@@ -7,7 +7,7 @@ RUN apk add --no-cache git
 COPY go.mod go.sum /go/src/app/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go mod download
 COPY ./ /go/src/app/
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o /go/src/app/prima-google-apis ./cmd/prima-google-apis
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o /go/src/app/prima-google-apis
 
 # Run stage
 FROM gcr.io/distroless/static:nonroot
